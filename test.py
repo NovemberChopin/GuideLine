@@ -104,4 +104,4 @@ if __name__ == '__main__':
 
     # fun()
 
-    # transfor(juncDir=juncDir, traDir=traDir, show=True)
+    transfor(juncDir=juncDir, traDir=traDir, show=True)

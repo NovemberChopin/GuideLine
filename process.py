@@ -339,12 +339,19 @@ def batchAugProcess(dataDir, index, step):
     print("feas shape: ", features.shape, " labs shape: ", labels.shape)
 
 
-def rot(tra, point, sin, cos):
-    """ 顺时针旋转 """
+def rot(tra, point, sin, cos, rotDirec):
+    """ 
+    顺时针旋转 
+    rotDirec: 旋转方向。0: 顺时针。1: 逆时针
+    """
     newTra = np.zeros_like(tra)
     x0, y0 = point[0], point[1]
-    newTra[:, 0] = (tra[:, 0]-x0)*cos + (tra[:, 1]-y0)*sin
-    newTra[:, 1] = (tra[:, 1]-y0)*cos - (tra[:, 0]-x0)*sin
+    if rotDirec == 0:   # 顺时针
+        newTra[:, 0] = (tra[:, 0]-x0)*cos + (tra[:, 1]-y0)*sin
+        newTra[:, 1] = (tra[:, 1]-y0)*cos - (tra[:, 0]-x0)*sin
+    if rotDirec == 1:   # 逆时针
+        newTra[:, 0] = (tra[:, 0]-x0)*cos - (tra[:, 1]-y0)*sin
+        newTra[:, 1] = (tra[:, 0]-x0)*sin + (tra[:, 1]-y0)*cos
     return newTra
 
 
@@ -360,16 +367,16 @@ def transfor(juncDir, traDir, show=False):
 
     boundary = np.load("{}/boundary.npy".format(juncDir))
     tra = np.load("{}/tra.npy".format(traDir))
-    newTra = rot(tra, point=point, sin=sin, cos=cos)
-    newBound = rot(boundary, point=point, sin=sin, cos=cos)
+    newTra = rot(tra, point=point, sin=sin, cos=cos, rotDirec=0)
+    newBound = rot(boundary, point=point, sin=sin, cos=cos, rotDirec=0)
     if show:
         # 绘制旋转后的路段信息
         fileDirs = glob.glob(pathname = '{}/segment*.npy'.format(juncDir))
         for file in fileDirs:
             lane = np.load(file)
-            centerLine = rot(tra=lane[:, :2], point=point, sin=sin, cos=cos)
-            leftLine = rot(tra=lane[:, 2:4], point=point, sin=sin, cos=cos)
-            rightLine = rot(tra=lane[:, 4:6], point=point, sin=sin, cos=cos)
+            centerLine = rot(tra=lane[:, :2], point=point, sin=sin, cos=cos, rotDirec=0)
+            leftLine = rot(tra=lane[:, 2:4], point=point, sin=sin, cos=cos, rotDirec=0)
+            rightLine = rot(tra=lane[:, 4:6], point=point, sin=sin, cos=cos, rotDirec=0)
             newLane = np.hstack([centerLine, leftLine, rightLine])
             if show:
                 plt.plot(newLane[:, 0], newLane[:, 1], color='g', linestyle='--')
