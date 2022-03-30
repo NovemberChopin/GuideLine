@@ -62,19 +62,19 @@ limitConfig = {
 
 
 if __name__ == '__main__':
-    dataDir = './data'
-    traDir = './data/bag_20220108_2'
-    juncDir = './data/junction'
-    limit = limitConfig['data_1']
-    index = 1   # 区分生成的数据
-    LCDirec = 'left'        # 左边换道
+    # dataDir = './data'
+    # traDir = './data/bag_20220108_2'
+    # juncDir = './data/junction'
+    # limit = limitConfig['data_1']
+    # index = 1   # 区分生成的数据
+    # LCDirec = 'left'        # 左边换道
 
-    # dataDir = './data2'
-    # traDir = './data2/bag_20220127_4'
-    # juncDir = './data2/junction'
-    # limit = limitConfig['data_2']
-    # index = 2               # 区分生成的数据
-    # LCDirec = 'right'       # 右边换道
+    dataDir = './data2'
+    traDir = './data2/bag_20220127_4'
+    juncDir = './data2/junction'
+    limit = limitConfig['data_2']
+    index = 2               # 区分生成的数据
+    LCDirec = 'right'       # 右边换道
     # 打印路段信息
     # plotMap(traDir=traDir, juncDir=juncDir, segBegin=0, segEnd=0)
 
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # boundary = np.load("{}/boundary.npy".format(juncDir))
     # fea, lab = getTrainData(tra=tra, boundary=boundary)
     # 对路段内所有数据进行处理
-    # fea, lab = batchProcess(dataDir=dataDir, juncDir=juncDir, index=index)
+    # fea, lab = batchProcess(dataDir=dataDir, juncDir=juncDir, index=index, LCDirec=LCDirec)
     # print("fea shape: ", fea.shape, " lab shape: ", lab.shape)
 
 
@@ -104,4 +104,4 @@ if __name__ == '__main__':
 
     # fun()
 
-    transfor(juncDir=juncDir, traDir=traDir, show=True)
+    # transfor(juncDir=juncDir, traDir=traDir, show=True)

@@ -74,6 +74,7 @@ def preProcess(dataDir, limit, LCDirec):
     seg_2 = np.load("{}/segment_2.npy".format(juncDir))
     boundary = np.vstack([seg_1, seg_2])
     boundary = boundary[(limit[0] < boundary[:, limit[2]]) & (boundary[:, limit[2]] < limit[1]), :]
+    np.save("{}/centerLane.npy".format(juncDir), boundary[:, :2])
     if LCDirec == 'left':   # 左边界
         np.save("{}/boundary.npy".format(juncDir), boundary[:, 2:4])
     else: np.save("{}/boundary.npy".format(juncDir), boundary[:, 4:6])
@@ -196,7 +197,7 @@ def showOneTra(traDir):
     plt.show()
 
 
-def getTrainData(tra, boundary):
+def getTrainData(tra, boundary, LCDirec):
     """
     数据处理流程，输入为截取后的数据
     tra: 车辆轨迹 (N, 4)
@@ -214,21 +215,26 @@ def getTrainData(tra, boundary):
     # boundary[:, 0] -= temp_x
     # boundary[:, 1] -= temp_y
     # 拟合道路边界
-    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=5, show=False)
+    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=3, show=False)
     boundaryCP = np.array(boundaryCP).reshape(1, -1)
 
     # fectures = np.array([0, 0, start_speed, end_x, end_y]).reshape(1, -1)
     # 开始点、开始速度、结束点
-    features = np.array([tra[0, 0], tra[0, 1], start_speed, tra[-1, 0], tra[-1, 1]]).reshape(1, -1)
-    features = np.hstack([features, boundaryCP])
+    measure = np.array([tra[0, 0], tra[0, 1], start_speed, tra[-1, 0], tra[-1, 1]]).reshape(1, -1)
+    if LCDirec == 'left':
+        cmd = np.array([1, 0]).reshape(1, -1)
+    else:   cmd = np.array([0, 1]).reshape(1, -1)
+
+    features = np.hstack([boundaryCP, measure, cmd])
     labels = np.array(traCP).reshape(1, -1)
     return features, labels
 
 
-def batchProcess(dataDir, juncDir, index):
+def batchProcess(dataDir, juncDir, index, LCDirec):
     '''
     批量处理数据
     index: 路段数据编号
+    LCDirec: 变道方向(left, right)
     '''
     if not os.path.exists("./data_input"):
         os.makedirs("./data_input")
@@ -239,7 +245,7 @@ def batchProcess(dataDir, juncDir, index):
     for file in fileDirs:
         # tra = np.load("{}/tra.npy".format(file))
         tra, boundary = transfor(juncDir=juncDir, traDir=file)
-        features, labels = getTrainData(tra=tra, boundary=boundary)
+        features, labels = getTrainData(tra=tra, boundary=boundary, LCDirec=LCDirec)
         fea.append(features)
         lab.append(labels)
 
@@ -352,6 +358,7 @@ def rot(tra, point, sin, cos, rotDirec):
     if rotDirec == 1:   # 逆时针
         newTra[:, 0] = (tra[:, 0]-x0)*cos - (tra[:, 1]-y0)*sin
         newTra[:, 1] = (tra[:, 0]-x0)*sin + (tra[:, 1]-y0)*cos
+    newTra[:, 2:4] = tra[:, 2:4]
     return newTra
 
 
@@ -361,7 +368,8 @@ def transfor(juncDir, traDir, show=False):
     return: 变换后的轨迹tra和边界boundary
     """
     begin_seg = np.loadtxt("{}/segment_0.csv".format(juncDir), delimiter=",", dtype="double")
-    point = [begin_seg[0, 0], begin_seg[0, 1]]
+    centerLane = np.load("{}/centerLane.npy".format(juncDir))
+    point = [centerLane[0, 0], centerLane[0, 1]]
     cos = begin_seg[0, 2]
     sin = begin_seg[0, 3]
 
@@ -385,6 +393,6 @@ def transfor(juncDir, traDir, show=False):
 
         plt.plot(newTra[:, 0], newTra[:, 1], color='r')         # 新的轨迹
         plt.plot(newBound[:, 0], newBound[:, 1], color='r')     # 新边界
-        # pltTra(juncDir=juncDir, traDir=traDir)                  # 原有的路段信息
+        pltTra(juncDir=juncDir, traDir=traDir)                  # 原有的路段信息
         plt.show()
     return newTra, newBound

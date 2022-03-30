@@ -1,3 +1,4 @@
+import cmd
 import numpy as np
 import os, sys
 import random
@@ -19,7 +20,7 @@ class BCAgent():
         
         self.features, self.labels = self.getData()
         
-        self.net = BCNet(self.input_size, self.output_size, args)
+        self.net = BCNet(18, 5, 2, self.output_size, args)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
         self.loss_function = nn.MSELoss()
 
@@ -55,9 +56,12 @@ class BCAgent():
         # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
         for epoch in range(self.args.episodes_num):
             for X, y in self.data_iter(self.batch_size, self.features, self.labels): 
-                X = torch.FloatTensor(X)
+                # X = torch.FloatTensor(X)
+                controlP = torch.FloatTensor(X[:, 0:18])
+                measure = torch.FloatTensor(X[:, 18:23])
+                cmd_onehot = torch.FloatTensor(X[:, 23:])
+                pred = self.net(controlP, measure, cmd_onehot)
                 y = torch.FloatTensor(y)
-                pred = self.net(X)
                 loss = self.loss_function(pred, y)
                 writer.add_scalar("loss:", loss, epoch)
 
