@@ -72,12 +72,12 @@ def preProcess(dataDir, limit, LCDirec):
     # 2: 计算截取后的道路边界信息 -> boundary.npy
     seg_1 = np.load("{}/segment_0.npy".format(juncDir))
     seg_2 = np.load("{}/segment_2.npy".format(juncDir))
-    boundary = np.vstack([seg_1, seg_2])
-    boundary = boundary[(limit[0] < boundary[:, limit[2]]) & (boundary[:, limit[2]] < limit[1]), :]
-    np.save("{}/centerLane.npy".format(juncDir), boundary[:, :2])
+    segment = np.vstack([seg_1, seg_2])
+    segment = segment[(limit[0] < segment[:, limit[2]]) & (segment[:, limit[2]] < limit[1]), :]
+    np.save("{}/centerLane.npy".format(juncDir), segment[:, :2])
     if LCDirec == 'left':   # 左边界
-        np.save("{}/boundary.npy".format(juncDir), boundary[:, 2:4])
-    else: np.save("{}/boundary.npy".format(juncDir), boundary[:, 4:6])
+        np.save("{}/boundary.npy".format(juncDir), segment[:, 2:4])
+    else: np.save("{}/boundary.npy".format(juncDir), segment[:, 4:6])
 
     # 3: 获取dataDir下所有截取范围后的轨迹 tra.npy
     traFileDirs = glob.glob(pathname='{}/bag_2022*_*'.format(dataDir))
@@ -215,7 +215,7 @@ def getTrainData(tra, boundary, LCDirec):
     # boundary[:, 0] -= temp_x
     # boundary[:, 1] -= temp_y
     # 拟合道路边界
-    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=3, show=False)
+    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=5, show=False)
     boundaryCP = np.array(boundaryCP).reshape(1, -1)
 
     # fectures = np.array([0, 0, start_speed, end_x, end_y]).reshape(1, -1)
@@ -358,7 +358,6 @@ def rot(tra, point, sin, cos, rotDirec):
     if rotDirec == 1:   # 逆时针
         newTra[:, 0] = (tra[:, 0]-x0)*cos - (tra[:, 1]-y0)*sin
         newTra[:, 1] = (tra[:, 0]-x0)*sin + (tra[:, 1]-y0)*cos
-    newTra[:, 2:4] = tra[:, 2:4]
     return newTra
 
 
@@ -376,6 +375,7 @@ def transfor(juncDir, traDir, show=False):
     boundary = np.load("{}/boundary.npy".format(juncDir))
     tra = np.load("{}/tra.npy".format(traDir))
     newTra = rot(tra, point=point, sin=sin, cos=cos, rotDirec=0)
+    newTra[:, 2:4] = tra[:, 2:4]
     newBound = rot(boundary, point=point, sin=sin, cos=cos, rotDirec=0)
     if show:
         # 绘制旋转后的路段信息

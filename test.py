@@ -51,6 +51,26 @@ def fun():
     print(labels.shape)
     np.save('./data_input/labels', labels)
 
+def fun3():
+    features = np.load("./data_input/features.npy")
+    labels = np.load("./data_input/labels.npy")
+    cp = features[0, :18].reshape((9, -1))
+    bs = BS_curve(8, 3)
+    bs.get_knots()
+   
+    x_asis = np.linspace(0, 1, 101)
+    
+    bs.cp = cp
+    curves = bs.bs(x_asis)
+    plt.scatter(cp[:, 0], cp[:, 1])
+    plt.plot(curves[:, 0], curves[:, 1])
+
+    cp_lable = labels[0, :].reshape((9, -1))
+    bs.cp = cp_lable
+    curves_label = bs.bs(x_asis)
+    plt.scatter(cp_lable[:, 0], cp_lable[:, 1])
+    plt.plot(curves_label[:, 0], curves_label[:, 1])
+    plt.show()
 
 
 
@@ -62,19 +82,19 @@ limitConfig = {
 
 
 if __name__ == '__main__':
-    # dataDir = './data'
-    # traDir = './data/bag_20220108_2'
-    # juncDir = './data/junction'
-    # limit = limitConfig['data_1']
-    # index = 1   # 区分生成的数据
-    # LCDirec = 'left'        # 左边换道
+    dataDir = './data'
+    traDir = './data/bag_20220108_2'
+    juncDir = './data/junction'
+    limit = limitConfig['data_1']
+    index = 1   # 区分生成的数据
+    LCDirec = 'left'        # 左边换道
 
-    dataDir = './data2'
-    traDir = './data2/bag_20220127_4'
-    juncDir = './data2/junction'
-    limit = limitConfig['data_2']
-    index = 2               # 区分生成的数据
-    LCDirec = 'right'       # 右边换道
+    # dataDir = './data2'
+    # traDir = './data2/bag_20220127_4'
+    # juncDir = './data2/junction'
+    # limit = limitConfig['data_2']
+    # index = 2               # 区分生成的数据
+    # LCDirec = 'right'       # 右边换道
     # 打印路段信息
     # plotMap(traDir=traDir, juncDir=juncDir, segBegin=0, segEnd=0)
 
@@ -102,6 +122,7 @@ if __name__ == '__main__':
     # ###########################################
 
 
-    # fun()
+    # fun3()
+    fun()
 
     # transfor(juncDir=juncDir, traDir=traDir, show=True)

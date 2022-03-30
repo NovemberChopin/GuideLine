@@ -26,13 +26,18 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     distance: 抽稀距离
     """
     # 加载模型
-    model = BCNet(args.input_size, args.output_size, args)
+    model = BCNet(18, 5, 2, args.output_size, args)
     model.load_state_dict(torch.load(modelPath))
     print('load network successed')
     model.eval()
 
-    feature = torch.FloatTensor(feature).view(1, -1)
-    pred = model(feature)
+    controlP = torch.FloatTensor(feature[:, 0:18])
+    measure = torch.FloatTensor(feature[:, 18:23])
+    cmd_onehot = torch.FloatTensor(feature[:, 23:])
+
+    # feature = torch.FloatTensor(feature).view(1, -1)
+
+    pred = model(controlP, measure, cmd_onehot)
 
     loss_function = nn.MSELoss()
     loss = loss_function(pred, torch.FloatTensor(label).view(1, -1))
@@ -57,7 +62,7 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     sin = begin_seg[0, 3]
     
     bs.get_knots()                          # 计算b样条节点并设置
-   
+    
     x_asis = np.linspace(0, 1, 101)
     #设置控制点
     bs.cp = label       # 标签(控制点)
@@ -69,7 +74,7 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     curves_pred[:, 0] += point[0]
     curves_pred[:, 1] += point[1]
 
-    # plt.plot(curves_pred[:, 0], curves_pred[:, 1], color='r')
+    plt.plot(curves_pred[:, 0], curves_pred[:, 1], color='r')
     plt.plot(curves_label[:, 0], curves_label[:, 1], color='b')
 
     plotMap(juncDir=juncDir)    # 打印路段信息
@@ -83,15 +88,17 @@ limitConfig = {
 limit = limitConfig["data_1"]
 traDir="./data/bag_20220108_2"
 juncDir = './data/junction'
+LCDirec = 'left'
 
 # limit = limitConfig["data_2"]
 # traDir="./data2/bag_20220112_1"
 # juncDir = './data2/junction'
+LCDirec = 'right'
 
-modelPath = './model/2203_292107/episodes_1999.pth'
+modelPath = './model/2203_301656/episodes_999.pth'
 tra = np.load("{}/tra.npy".format(traDir))
 boundary = np.load("{}/boundary.npy".format(juncDir))
-feature, label = getTrainData(tra=tra, boundary=boundary)
+feature, label = getTrainData(tra=tra, boundary=boundary, LCDirec=LCDirec)
 
 eval(
     feature=feature,
