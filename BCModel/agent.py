@@ -1,3 +1,4 @@
+from cProfile import label
 import numpy as np
 import os, sys
 import random
@@ -21,7 +22,7 @@ class BCAgent():
         
         self.net = BCNet(self.input_size, self.output_size, args)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.learning_rate)
-        self.loss_function = nn.MSELoss()
+        self.loss_function = nn.MSELoss(size_average=False)     # reduction='sum'
 
         time_now = time.strftime('%y%m_%d%H%M')
         self.save_dir = "{}/{}".format(args.save_dir, time_now)
@@ -57,16 +58,16 @@ class BCAgent():
             for X, y in self.data_iter(self.batch_size, self.features, self.labels): 
                 X = torch.FloatTensor(X)
                 y = torch.FloatTensor(y)
-                pred = self.net(X)
-                loss = self.loss_function(pred, y)
+                pred = self.net(X)                  # (batch_size, 18)
+                # loss = self.loss_function(pred, y)  # (batch_size, 18)
+                loss = torch.sum((pred-y)**2) / self.batch_size
                 writer.add_scalar("loss:", loss, epoch)
-
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
             
-            if epoch%self.args.save_interval == 0:
-                self.save(epoch)
+            # if epoch%self.args.save_interval == 0:
+            #     self.save(epoch)
             print(f"epoch: {epoch:<4} loss: {loss:>7f}")
         self.save(epoch)
 

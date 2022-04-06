@@ -1,6 +1,3 @@
-from cProfile import label
-from json import load
-from turtle import color
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -36,8 +33,8 @@ def plotMap(juncDir, traDir=None, segBegin=0, segEnd=0, tra_begin=0, tra_length=
         r_b_x = xpoint + rLength*sin
         r_b_y = ypoint - rLength*cos
         if traDir:      # 如果轨迹路径不为空，则打印轨迹
-            tra = np.load("{}/tra.npy".format(traDir))
-            # tra = np.loadtxt("{}/tra.csv".format(traDir), delimiter=",", dtype="double")
+            # tra = np.load("{}/tra.npy".format(traDir))
+            tra = np.loadtxt("{}/tra.csv".format(traDir), delimiter=",", dtype="double")
             if tra_length == 0:
                 plt.plot(tra[tra_begin:, 0], tra[tra_begin:, 1], color='r')   # 轨迹
             else:
@@ -47,8 +44,8 @@ def plotMap(juncDir, traDir=None, segBegin=0, segEnd=0, tra_begin=0, tra_length=
         plt.plot(xpoint, ypoint, color='g', linestyle='--')   # 中心线
         plt.plot(l_b_x, l_b_y, color='y')
         plt.plot(r_b_x, r_b_y, color='y')
-    boundary = np.load("{}/boundary.npy".format(juncDir))
-    plt.plot(boundary[:, 0], boundary[:, 1], color='r')
+    # boundary = np.load("{}/boundary.npy".format(juncDir))
+    # plt.plot(boundary[:, 0], boundary[:, 1], color='r')
     plt.show()
 
 
@@ -211,11 +208,11 @@ def getTrainData(tra, boundary):
     end_x = tra[-1, 0]      # 轨迹结束相对坐标，(以轨迹初始点(0,0)为起始点)
     end_y = tra[-1, 1]
     start_speed = math.sqrt(tra[0, 2]**2 + tra[0, 3]**2)
-    traCP = bsplineFitting(tra=tra[:, 0:2], cpNum=8, degree=3, distance=5, show=False)
+    traCP = bsplineFitting(tra=tra[:, 0:2], cpNum=8, degree=3, distance=7.5, show=False)
     boundary[:, 0] -= temp_x
     boundary[:, 1] -= temp_y
     # 拟合道路边界
-    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=5, show=False)
+    boundaryCP = bsplineFitting(boundary, cpNum=8, degree=3, distance=3, show=False)
     boundaryCP = np.array(boundaryCP).reshape(1, -1)
 
     fectures = np.array([0, 0, start_speed, end_x, end_y]).reshape(1, -1)
@@ -296,12 +293,19 @@ def augmentData(juncDir, traDir, angle, show=False):
 def getAugmentTrainData(juncDir, traDir, step):
     """ 返回对一条数据旋转一周所得到的数据的网络输入 """
     features, labels = [], []
-    dataNum = int(360 / step)
+    dataNum = int(360 / step) + 50
     for index in np.arange(start=0, stop=360, step=step):
         # 每旋转 5度 生成一条数据
         angle = np.pi * (index/180.)
         tra, boundary = augmentData(juncDir=juncDir, traDir=traDir, angle=angle)
         # plt.plot(tra[:, 0], tra[:, 1])
+        fea, lab = getTrainData(tra=tra, boundary=boundary)
+        features.append(fea)
+        labels.append(lab)
+    # 再按随机角度生成 50 条数据
+    angles = np.random.randint(low=1, high=360, size=50)
+    for angle in angles:
+        tra, boundary = augmentData(juncDir=juncDir, traDir=traDir, angle=angle)
         fea, lab = getTrainData(tra=tra, boundary=boundary)
         features.append(fea)
         labels.append(lab)

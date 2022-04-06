@@ -39,17 +39,19 @@ def fun():
     """
     把各个路段数据整合
     """
-    fea_1 = np.load('./data_input/features_1.npy')
-    fea_2 = np.load('./data_input/features_2.npy')
-    features = np.vstack([fea_1, fea_2])
+    fea_1 = np.load('./data_input/features_aug_1.npy')
+    fea_2 = np.load('./data_input/features_aug_2.npy')
+    fea_3 = np.load('./data_input/features_aug_3.npy')
+    features = np.vstack([fea_1, fea_2, fea_3])
     print(features.shape)
-    np.save('./data_input/features', features)
+    np.save('./data_input/features_aug', features)
 
-    lab_1 = np.load('./data_input/labels_1.npy')
-    lab_2 = np.load('./data_input/labels_2.npy')
-    labels = np.vstack([lab_1, lab_2])
+    lab_1 = np.load('./data_input/labels_aug_1.npy')
+    lab_2 = np.load('./data_input/labels_aug_2.npy')
+    lab_3 = np.load('./data_input/labels_aug_3.npy')
+    labels = np.vstack([lab_1, lab_2, lab_3])
     print(labels.shape)
-    np.save('./data_input/labels', labels)
+    np.save('./data_input/labels_aug', labels)
 
 
 
@@ -57,32 +59,41 @@ def fun():
 
 limitConfig = {
     "data_1": [-200, -100, 0],      # x 轴坐标
-    "data_2": [-3910, -3810, 1]     # y 轴坐标
+    "data_2": [-3910, -3810, 1],    # y 轴坐标
+    "data_3": [-850, -700, 0]       # x 轴坐标
 }
 
 
 if __name__ == '__main__':
-    # dataDir = './data'
-    # traDir = './data/bag_20220108_2'
-    # juncDir = './data/junction'
-    # limit = limitConfig['data_1']
-    # index = 1   # 区分生成的数据
-    # LCDirec = 'left'        # 左边换道
+    dataDir = './data'
+    traDir = './data/bag_20220326_5'
+    juncDir = './data/junction'
+    limit = limitConfig['data_1']
+    index = 1               # 区分生成的数据
+    LCDirec = 'left'        # 左边换道
 
-    dataDir = './data2'
-    traDir = './data2/bag_20220127_4'
-    juncDir = './data2/junction'
-    limit = limitConfig['data_2']
-    index = 2               # 区分生成的数据
-    LCDirec = 'right'       # 右边换道
+    # dataDir = './data2'
+    # traDir = './data2/bag_20220326_3'
+    # juncDir = './data2/junction'
+    # limit = limitConfig['data_2']
+    # index = 2               # 区分生成的数据
+    # LCDirec = 'right'       # 右边换道
+
+    # dataDir = './data3'
+    # traDir = './data3/bag_20220108_1'
+    # juncDir = './data3/junction'
+    # limit = limitConfig['data_3']
+    # index = 3               # 区分生成的数据
+    # LCDirec = 'left'        # 右边换道
+
     # 打印路段信息
-    # plotMap(traDir=traDir, juncDir=juncDir, segBegin=0, segEnd=0)
+    # plotMap(juncDir=juncDir, traDir=traDir, segBegin=0, segEnd=0)
 
     # 路段数据预处理
     # preProcess(dataDir=dataDir, limit=limit, LCDirec=LCDirec)
 
     # 打印轨迹(相对坐标)
-    # pltTra(dataDir=dataDir, juncDir=juncDir, traDir=traDir)     
+    pltTra(dataDir=dataDir, juncDir=juncDir, traDir=None)
 
     # ############
     # 处理一条数据
@@ -94,9 +105,11 @@ if __name__ == '__main__':
     # print("fea shape: ", fea.shape, " lab shape: ", lab.shape)
 
 
-    # augmentData(juncDir=juncDir, traDir=traDir, angle=np.pi*(5/180), show=True)
+    # augmentData(juncDir=juncDir, traDir=traDir, angle=np.pi*(30/180), show=True)
 
-    feas, labs = getAugmentTrainData(juncDir=juncDir, traDir=traDir, step=5)
-    print(feas.shape, " ", labs.shape)
+    # feas, labs = getAugmentTrainData(juncDir=juncDir, traDir=traDir, step=5)
+    # print(feas.shape, " ", labs.shape)
 
     # batchAugProcess(dataDir=dataDir, index=index, step=5)
+
+    # fun()
