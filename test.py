@@ -3,12 +3,6 @@ from matplotlib import pyplot as plt
 from process import *
 import numpy as np
 import glob
-from process_data.B_Spline_Approximation import BS_curve
-from process_data.uniformization import uniformization
-
-
-
-
 
 
 def autoMkdir(first_dir, last_dir):
@@ -28,10 +22,11 @@ def fun2(dataDir):
     """ 删除特定文件每条数据中的道路文件 """
     fileDirs = glob.glob(pathname = '{}/bag_2022*'.format(dataDir))
     for file in fileDirs:
-        seg_file_list = glob.glob(pathname='{}/segment*.csv'.format(file))
+        seg_file_list = glob.glob(pathname='{}/*.npy'.format(file))
         for seg_file in seg_file_list:
             try:
                 os.remove(seg_file)
+                print("delete file: ", seg_file)
             except:
                 print("删除文件%s异常" % seg_file)
 
@@ -55,61 +50,101 @@ def fun():
 
 
 
-
-
-limitConfig = {
-    "data_1": [-200, -100, 0],      # x 轴坐标
-    "data_2": [-3910, -3810, 1],    # y 轴坐标
-    "data_3": [-850, -700, 0]       # x 轴坐标
+config = {
+    "data_0": {                         # 金蝶复兴四路
+        "limit": [-200, -100, 0],       # x 轴坐标
+        "index": 0,                     # 区分生成的数据
+        "LCDirec": 'left',
+        "testBag": 'bag_20220108_1'
+    },
+    "data_1": {                         # 十字路口 北
+        "limit": [-3730, -3630, 1],
+        "index": 1,
+        "LCDirec": 'right',
+        "testBag": 'bag_20220326_4'
+    },
+    "data_2": {                         # 十字路口 南
+        "limit": [-3910, -3810, 1],
+        "index": 2,
+        "LCDirec": 'right',
+        "testBag": 'bag_20220326_5'
+    },
+    "data_4": {                         # 十字路口 西
+        "limit": [-590, -490, 0],
+        "index": 4,
+        "LCDirec": 'left',
+        "testBag": 'bag_20220326_5'
+    },
+    "data_6": {                         # 最南端路口
+        "limit": [-825, -725, 0],
+        "index": 6,
+        "LCDirec": 'left',
+        "testBag": 'bag_20220108_1'
+    },
 }
 
 
-if __name__ == '__main__':
-    dataDir = './data'
-    traDir = './data/bag_20220326_5'
-    juncDir = './data/junction'
-    limit = limitConfig['data_1']
-    index = 1               # 区分生成的数据
-    LCDirec = 'left'        # 左边换道
-
-    # dataDir = './data2'
-    # traDir = './data2/bag_20220326_3'
-    # juncDir = './data2/junction'
-    # limit = limitConfig['data_2']
-    # index = 2               # 区分生成的数据
-    # LCDirec = 'right'       # 右边换道
-
-    # dataDir = './data3'
-    # traDir = './data3/bag_20220108_1'
-    # juncDir = './data3/junction'
-    # limit = limitConfig['data_3']
-    # index = 3               # 区分生成的数据
-    # LCDirec = 'left'        # 右边换道
-
-    # 打印路段信息
-    # plotMap(juncDir=juncDir, traDir=traDir, segBegin=0, segEnd=0)
-
+def run():
     # 路段数据预处理
-    # preProcess(dataDir=dataDir, limit=limit, LCDirec=LCDirec)
+    features = np.zeros(shape=(1, 23))
+    labels = np.zeros(shape=(1, 18))
+    data_dirs=glob.glob(pathname='./data/*data*')
+    print(data_dirs)
+    for dir in ['./data/data_2', './data/data_6', './data/data_0']:
+        print(dir)
+        sub_data = dir.split('/')[2]
+        preProcess(dataDir=dir, 
+                   limit=config[sub_data]['limit'], 
+                   LCDirec=config[sub_data]['LCDirec'])
 
-    # 打印轨迹(相对坐标)
-    pltTra(dataDir=dataDir, juncDir=juncDir, traDir=None)
+        # 对路段内所有数据进行处理
+        # fea, lab = batchProcess(dataDir=dir, 
+        #                         juncDir="{}/junction".format(dir), 
+        #                         index=config[sub_data]['index'])
+        # print("fea shape: ", fea.shape, " lab shape: ", lab.shape)
 
-    # ############
+        # 扩充数据
+    #     feas, labs = batchAugProcess(dataDir=dir, step=5, dataNum=100)
+    #     features = np.vstack([features, feas])
+    #     labels = np.vstack([labels, labs])
+
+    # features = np.delete(features, 0, axis=0)
+    # labels = np.delete(labels, 0, axis=0)
+    # print("feas shape: ", features.shape, " labs shape: ", labels.shape)
+    # np.save("{}/features_aug".format("./data_input"), features)
+    # np.save("{}/labels_aug".format("./data_input"), labels)
+
+
+if __name__ == '__main__':
+
+    run()
+
+#################################################################################
+
+    juncName = "data_6"
+    bagName = config[juncName]['testBag']
+
+    dataDir = './data/{}'.format(juncName)
+    juncDir = './data/{}/junction'.format(juncName)
+    traDir = './data/{}/{}'.format(juncName, bagName)
+    index = config[juncName]['index']
+    LCDirec = config[juncName]['LCDirec']
+
+    # plotMap(juncDir=juncDir, traDir=traDir)
+
+    # 打印轨迹
+    # pltTra(dataDir=dataDir, juncDir=juncDir, traDir=None)
+
     # 处理一条数据
     # tra = np.load("{}/tra.npy".format(traDir))
     # boundary = np.load("{}/boundary.npy".format(juncDir))
     # fea, lab = getTrainData(tra=tra, boundary=boundary)
-    # 对路段内所有数据进行处理
-    # fea, lab = batchProcess(dataDir=dataDir, juncDir=juncDir, index=index)
-    # print("fea shape: ", fea.shape, " lab shape: ", lab.shape)
-
-
+    
+    
     # augmentData(juncDir=juncDir, traDir=traDir, angle=np.pi*(30/180), show=True)
-
+    # feas, labs = getAugData(juncDir=juncDir, traDir=traDir, dataNum=100)
     # feas, labs = getAugmentTrainData(juncDir=juncDir, traDir=traDir, step=5)
     # print(feas.shape, " ", labs.shape)
 
-    # batchAugProcess(dataDir=dataDir, index=index, step=5)
-
-    # fun()
+    # 转换航角
+    # transfor(juncDir=juncDir, traDir=traDir, show=True)

@@ -4,21 +4,19 @@ from BCModel.arguments import get_common_args
 from BCModel.net import BCNet
 
 import torch
-import torch.nn as nn
 
 from matplotlib import pyplot as plt 
 
 from process_data.B_Spline_Approximation import  BS_curve
-from process_data.uniformization import uniformization
-from process import plotMap
-from process import getTrainData
+from process import *
+from test import config
 
 
 args = get_common_args()
 
 
 
-def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
+def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     """
     查看模型预测效果
     juncDir: 车道轨迹路径
@@ -32,12 +30,12 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     print('load network successed')
     model.eval()
 
-    feature = torch.FloatTensor(feature).view(1, -1)
+    feature = torch.FloatTensor(feature[:, :23]).view(1, -1)
     pred = model(feature)
 
-    # loss_function = nn.MSELoss()
+    # loss_function = nn.MSELoss(reduction='sum')
     # loss = loss_function(pred, torch.FloatTensor(label).view(1, -1))
-    # print("loss is: ", loss)
+    # print("loss is MSE: ", loss)
 
     # 将label  和pred  都转为numpy
     label = label.reshape(-1, 2)
@@ -50,7 +48,7 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     bs = BS_curve(n=cpNum, p=degree)        # 初始化B样条
    
     # 拿到轨迹的开始位置
-    tra = np.loadtxt("{}/tra.csv".format(traDir), delimiter=",", dtype="double")
+    tra = np.load("{}/tra.npy".format(traDir))
     tra = tra[:, 0:2]
     start_x, start_y = tra[0, 0], tra[0, 1] # 开始位置
     tra[:, 0] -= tra[0, 0]                  # 相对坐标
@@ -87,25 +85,28 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree, distance):
     plotMap(juncDir=juncDir)    # 打印路段信息
 
 
-traDir="./data/bag_20220108_2"
-juncDir = './data/junction'
+def evalModel(modelPath):
+    data_dirs=glob.glob(pathname='./data/*data*')
+    print(data_dirs)
+    for dir in ['./data/data_2', './data/data_6', './data/data_0']:
+        sub_data = dir.split('/')[2]
+        bagName = config[sub_data]['testBag']
+        juncDir = '{}/junction'.format(dir)
+        traDir = '{}/{}'.format(dir, bagName)
 
-traDir="./data2/bag_20220112_2"
-juncDir = './data2/junction'
+        tra, boundary = augmentData(juncDir=juncDir, traDir=traDir, angle=0)
+        fea, lab = getTrainData(tra=tra, boundary=boundary)
 
-traDir="./data3/bag_20220110_1"
-juncDir = './data3/junction' 
+        eval(
+            feature=fea,
+            label=lab,
+            modelPath=modelPath,
+            juncDir=juncDir, 
+            traDir=traDir,
+            cpNum=8, degree=3
+        )
 
-modelPath = './model/2204_011340/episodes_999.pth'
-tra = np.load("{}/tra.npy".format(traDir))
-boundary = np.load("{}/boundary.npy".format(juncDir))
-feature, label = getTrainData(tra=tra, boundary=boundary)
+if __name__ == '__main__':
 
-eval(
-    feature=feature,
-    label=label,
-    modelPath=modelPath,
-    juncDir=juncDir, 
-    traDir=traDir,
-    cpNum=8, degree=3, distance=5
-)
+    modelPath = './model/2204_091042/episodes_999.pth'      # 所有路段截取固定长度100m
+    evalModel(modelPath=modelPath)
