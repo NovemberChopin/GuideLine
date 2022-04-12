@@ -84,13 +84,14 @@ config = {
 }
 
 
-def run():
+def run(isAug=True):
     # 路段数据预处理
     features = np.zeros(shape=(1, 23))
     labels = np.zeros(shape=(1, 18))
     data_dirs=glob.glob(pathname='./data/*data*')
     print(data_dirs)
     for dir in ['./data/data_2', './data/data_6', './data/data_0']:
+    # for dir in data_dirs:
         print(dir)
         sub_data = dir.split('/')[2]
         preProcess(dataDir=dir, 
@@ -104,24 +105,26 @@ def run():
         # print("fea shape: ", fea.shape, " lab shape: ", lab.shape)
 
         # 扩充数据
-    #     feas, labs = batchAugProcess(dataDir=dir, step=5, dataNum=100)
-    #     features = np.vstack([features, feas])
-    #     labels = np.vstack([labels, labs])
+        feas, labs = batchAugProcess(dataDir=dir, step=5, isAug=isAug)
+        features = np.vstack([features, feas])
+        labels = np.vstack([labels, labs])
 
-    # features = np.delete(features, 0, axis=0)
-    # labels = np.delete(labels, 0, axis=0)
-    # print("feas shape: ", features.shape, " labs shape: ", labels.shape)
-    # np.save("{}/features_aug".format("./data_input"), features)
-    # np.save("{}/labels_aug".format("./data_input"), labels)
+    features = np.delete(features, 0, axis=0)
+    labels = np.delete(labels, 0, axis=0)
+    print("feas shape: ", features.shape, " labs shape: ", labels.shape)
+    if isAug == True:
+        np.save("{}/features_aug_nor".format("./data_input"), features)
+        np.save("{}/labels_aug_nor".format("./data_input"), labels)
 
 
 if __name__ == '__main__':
 
-    run()
-
+    run(isAug=True)
+    
 #################################################################################
+# 测试函数
 
-    juncName = "data_6"
+    juncName = "data_2"
     bagName = config[juncName]['testBag']
 
     dataDir = './data/{}'.format(juncName)
@@ -148,3 +151,18 @@ if __name__ == '__main__':
 
     # 转换航角
     # transfor(juncDir=juncDir, traDir=traDir, show=True)
+
+    # centerLane = np.load("{}/centerLane.npy".format(juncDir))
+    # point = [centerLane[0, 0], centerLane[0, 1]]
+    # cos = centerLane[0, 2]
+    # sin = centerLane[0, 3]
+    # feas, labs = getAugmentTrainData(
+    #         juncDir=juncDir, traDir=traDir, step=5, point=point, cos=cos, sin=sin)
+    # print("fea shape: ", feas.shape, "lab shape: ", labs.shape)
+    # print(feas[0, :])
+    # print(feas[1, :])
+
+    # lab = np.load("{}/label.npy".format(traDir))
+    # lab = lab.reshape(-1, 2)
+    # plt.plot(lab[:, 0], lab[:, 1])
+    # plt.show()
