@@ -17,7 +17,15 @@ def autoMkdir(first_dir, last_dir):
             desDir = "{}/{}".format(last_dir, file)
             if not os.path.exists(desDir):
                 os.mkdir(desDir)
-    
+
+def rename(path):
+    fileList=os.listdir(path)
+    for file in fileList:
+        oldname = path + file
+        newname = path + 'bag_' + file
+        # newDir = path + '20220310_{}'.format(i)
+        os.rename(oldname, newname)
+  
 def fun2(dataDir):
     """ 删除特定文件每条数据中的道路文件 """
     fileDirs = glob.glob(pathname = '{}/bag_2022*'.format(dataDir))
@@ -29,25 +37,6 @@ def fun2(dataDir):
                 print("delete file: ", seg_file)
             except:
                 print("删除文件%s异常" % seg_file)
-
-def fun():
-    """
-    把各个路段数据整合
-    """
-    fea_1 = np.load('./data_input/features_aug_1.npy')
-    fea_2 = np.load('./data_input/features_aug_2.npy')
-    fea_3 = np.load('./data_input/features_aug_3.npy')
-    features = np.vstack([fea_1, fea_2, fea_3])
-    print(features.shape)
-    np.save('./data_input/features_aug', features)
-
-    lab_1 = np.load('./data_input/labels_aug_1.npy')
-    lab_2 = np.load('./data_input/labels_aug_2.npy')
-    lab_3 = np.load('./data_input/labels_aug_3.npy')
-    labels = np.vstack([lab_1, lab_2, lab_3])
-    print(labels.shape)
-    np.save('./data_input/labels_aug', labels)
-
 
 
 config = {
@@ -75,6 +64,12 @@ config = {
         "LCDirec": 'left',
         "testBag": 'bag_20220326_5'
     },
+    "data_5": {                         # 小转盘 
+        "limit": [-920, -820, 0],
+        "index": 5,
+        "LCDirec": 'right',
+        "testBag": 'bag_20220326_1'
+    },
     "data_6": {                         # 最南端路口
         "limit": [-825, -725, 0],
         "index": 6,
@@ -90,7 +85,7 @@ def run(isAug=True):
     labels = np.zeros(shape=(1, 18))
     data_dirs=glob.glob(pathname='./data/*data*')
     print(data_dirs)
-    for dir in ['./data/data_2', './data/data_6', './data/data_0']:
+    for dir in ['./data/data_0', './data/data_1', './data/data_2', './data/data_6']:
     # for dir in data_dirs:
         print(dir)
         sub_data = dir.split('/')[2]
@@ -118,13 +113,13 @@ def run(isAug=True):
 
 
 if __name__ == '__main__':
-
-    run(isAug=True)
     
+    run(isAug=True)
+
 #################################################################################
 # 测试函数
 
-    juncName = "data_2"
+    juncName = "data_5"
     bagName = config[juncName]['testBag']
 
     dataDir = './data/{}'.format(juncName)
@@ -135,6 +130,21 @@ if __name__ == '__main__':
 
     # plotMap(juncDir=juncDir, traDir=traDir)
 
+    # boundary = np.loadtxt("./data/test/boundary.csv", delimiter=",", dtype="double")
+    # start_time = time.time()
+    # bsplineFitting(tra=boundary, cpNum=8, degree=3, show=True)
+    # end_time = time.time()
+    # print("time 1: ", end_time - start_time)
+    # start_time = time.time()
+    # re = Reduce(pointNum=20)
+    # reduce_bound = re.getReducePoint(boundary)
+    # bsplineFitting(tra=reduce_bound, cpNum=8, degree=3, show=True)
+    # end_time = time.time()
+    # print("time 2: ", end_time - start_time)
+
+
+    # plt.plot(boundary[:, 0], boundary[:, 1])
+    # plt.show()
     # 打印轨迹
     # pltTra(dataDir=dataDir, juncDir=juncDir, traDir=None)
 

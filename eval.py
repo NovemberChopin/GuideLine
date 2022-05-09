@@ -14,6 +14,19 @@ from test import config
 
 args = get_common_args()
 
+def convertModel(modelPath):
+    """
+    将pytorch保存的模型转化为c++可以加载的模型
+    """
+    model = BCNet(args.input_size, args.output_size, args)
+    model.load_state_dict(torch.load(modelPath))
+    print('load network successed')
+    model.eval()
+    input = torch.rand(1, args.input_size)
+    trace_model = torch.jit.trace(model, input)
+    trace_model.save("{}/BCModel.pt".format(args.save_dir))
+    print('save convert model: {}/BCModel.pt'.format(args.save_dir))
+
 
 def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     """
@@ -81,21 +94,25 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     pred_cp[:, 0] += centerLane[0, 0]
     pred_cp[:, 1] += centerLane[0, 1]
 
-    plt.plot(curves_label[:, 0], curves_label[:, 1], color='b')
+    dataDir = juncDir.split('/j')[0]
+    pltTra(juncDir=juncDir, dataDir=dataDir)
+
+    # plt.plot(curves_label[:, 0], curves_label[:, 1], color='b')
     plt.plot(curves_pred[:, 0], curves_pred[:, 1], color='r')
-    plt.scatter(label_cp[:, 0], label_cp[:, 1], color='b')
+    # plt.scatter(label_cp[:, 0], label_cp[:, 1], color='b')
     plt.scatter(pred_cp[:, 0], pred_cp[:, 1], color='r')
     
-    plotMap(juncDir=juncDir)    # 打印路段信息
+    # plotMap(juncDir=juncDir)    # 打印路段信息
+    
     plt.show()
 
 
 def evalModel(modelPath):
     data_dirs=glob.glob(pathname='./data/*data*')
     print(data_dirs)
-    for dir in ['./data/data_2', './data/data_6', './data/data_0']:
-    # data_dirs=glob.glob(pathname='./data/*data*')
-    # for dir in data_dirs:
+    # for dir in ['./data/data_1', './data/data_2', './data/data_6', './data/data_0']:
+    data_dirs=glob.glob(pathname='./data/*data*')
+    for dir in data_dirs:
         sub_data = dir.split('/')[2]
         bagName = config[sub_data]['testBag']
         juncDir = '{}/junction'.format(dir)
@@ -114,5 +131,8 @@ def evalModel(modelPath):
 
 if __name__ == '__main__':
     # 2204_091800 --> 缩放版本
-    modelPath = './model/2204_111658/episodes_1999.pth'
-    evalModel(modelPath=modelPath)
+    modelPath = './model/2204_262046/episodes_999.pth'
+    # evalModel(modelPath=modelPath)
+
+    
+    convertModel(modelPath=modelPath)

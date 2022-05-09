@@ -40,12 +40,14 @@ def plotMap(juncDir, traDir=None, segBegin=0, segEnd=0, tra_begin=0, tra_length=
             else:
                 tra_end = tra_begin + tra_length
                 plt.plot(tra[tra_begin:tra_end, 0], tra[tra_begin:tra_end, 1], color='r')
-
-        plt.plot(xpoint, ypoint, color='g', linestyle='--')   # 中心线
-        plt.plot(l_b_x, l_b_y, color='y')
-        plt.plot(r_b_x, r_b_y, color='y')
-    # boundary = np.load("{}/boundary.npy".format(juncDir))
-    # plt.plot(boundary[:, 0], boundary[:, 1], color='r')
+        if index % 2 == 0:
+            plt.plot(xpoint, ypoint, color='g', linestyle='--')   # 中心线
+            plt.plot(l_b_x, l_b_y, color='y')
+            plt.plot(r_b_x, r_b_y, color='y')
+        else:
+            plt.plot(xpoint, ypoint, color='b', linestyle='--')   # 中心线
+            plt.plot(l_b_x, l_b_y, color='r')
+            plt.plot(r_b_x, r_b_y, color='r')
     plt.show()
 
 
@@ -105,8 +107,8 @@ def pltTra(juncDir, dataDir=None, traDir=None):
         fileDirs = glob.glob(pathname = '{}/bag_2022*_*'.format(dataDir))
         for file in fileDirs:
             # tra = np.loadtxt("{}/tra.csv".format(file), delimiter=",", dtype="double")
-            tra = np.load("{}/tra.npy".format(file))
-            plt.plot(tra[:, 0], tra[:, 1], color='r')
+            tra = np.load("{}/tra.npy".format(file))            
+            plt.plot(tra[:, 0], tra[:, 1], color='c')
     
     fileDirs = glob.glob(pathname = '{}/segment*.npy'.format(juncDir))
     for file in fileDirs:
@@ -242,7 +244,7 @@ def augmentData(juncDir, traDir, angle, show=False):
 
 
 def buildTrainData(reduce_tra, reduce_bound, cos, sin, start_speed, rotDirec):
-    """ 对抽稀后的轨迹顺时针旋转 angle 角度，然后求其控制点 """
+    """ 对抽稀后的轨迹逆时针旋转 angle 角度，然后求其控制点 """
     rot_tra = rot(tra=reduce_tra, point=[0, 0], cos=cos, sin=sin, rotDirec=rotDirec)
     lab_cp = bsplineFitting(rot_tra, cpNum=8, degree=3)     # shape: (9, 2)
     # plt.plot(rot_tra[:, 0], rot_tra[:, 1])
@@ -271,10 +273,6 @@ def getAugmentTrainData(juncDir, traDir, step, point, cos, sin, isAug, pointNum=
     re = Reduce(pointNum=pointNum)
     reduce_tra = re.getReducePoint(newTra)
     reduce_bound = re.getReducePoint(newBoundary)
-    assert reduce_tra.shape[0] == pointNum, \
-        "抽稀后的数据点个数要等于 pointNum"
-    assert reduce_bound.shape[0] == pointNum, \
-        "抽稀后的数据点个数要等于 pointNum"
     # TODO 把 x 轴缩放
     reduce_tra[:, 0] /= 10.
     reduce_bound[:, 0] /= 10.
