@@ -4,6 +4,9 @@ from process import *
 import numpy as np
 import glob
 
+from BCModel.arguments import get_common_args
+from BCModel.net import BCNet
+import torch
 
 def autoMkdir(first_dir, last_dir):
     """
@@ -112,10 +115,89 @@ def run(isAug=True):
         np.save("{}/labels_aug_nor".format("./data_input"), labels)
 
 
+def getFeature(juncDir, pointNum, modelPath, args):
+    """ 从 boundary 获取网络输入"""
+    point = [-96.1358, -1184.32]
+    end_point = [-196.56,-1186.13]
+    cos = -1
+    sin = 1.28155e-05
+    boundary = np.loadtxt(juncDir, delimiter=",", dtype="double")
+    rot_bound = rot(boundary[:, :2], point=point, sin=sin, cos=cos)
+    re = Reduce(pointNum=pointNum)
+    reduce_bound = re.getReducePoint(rot_bound)
+    reduce_bound[:, 0] /= 10.
+    
+    bound = rot(tra=reduce_bound, point=[0, 0], sin=sin, cos=cos, rotDirec=1)
+    # plt.plot(bound[:, 0], bound[:, 1])
+    # c++最终结果
+    # bound_as = np.loadtxt("./test/boundAS.csv", delimiter=",", dtype="double")
+    # plt.plot(bound_as[:, 0], bound_as[:, 1], color='r')
+
+    bound_cp = bsplineFitting(bound, cpNum=8, degree=3)
+    # plt.scatter(bound_cp[:, 0], bound_cp[:, 1])
+    print("cp: ", bound_cp)
+
+    # bound_cp = np.array([[-0.027405,   -0.01127664],
+    #                     [-0.26287144,  2.5372777 ],
+    #                     [ 0.10681021,  3.6125014 ],
+    #                     [ 1.4588654,   5.491921  ],
+    #                     [ 2.2032552,   6.4668226 ],
+    #                     [ 2.2953942,   7.640709  ],
+    #                     [ 2.3508315,   8.499055  ],
+    #                     [ 2.2691495,   9.146813  ],
+    #                     [ 2.2605891,   9.39887   ]])
+    # 加载模型
+    model = BCNet(args.input_size, args.output_size, args)
+    model.load_state_dict(torch.load(modelPath))
+    print('load network successed')
+    model.eval()
+
+    feature = torch.FloatTensor(bound_cp).view(1, -1)
+    pred = model(feature)
+    pred = pred.view(-1, 2).detach().numpy()
+    # plt.scatter(pred[:, 0], pred[:, 1])
+    print("pred: ", pred)
+
+    # 还原 控制点
+    rot_cp = rot(tra=pred, point=pred[0, :], sin=sin, cos=cos, rotDirec=0)
+    rot_cp[:, 0] *= 10.
+    restore_cp = rot(tra=rot_cp, point=[0, 0], sin=sin, cos=cos, rotDirec=1)
+    restore_cp[:, 0] += point[0]
+    restore_cp[:, 1] += point[1]
+
+    restore_cp[0, :] = point
+    restore_cp[-1, :] = end_point
+    print("restore_cp: ", restore_cp)
+    plt.scatter(restore_cp[:, 0], restore_cp[:, 1])
+
+    bs = BS_curve(n=8, p=3)        # 初始化B样条
+    bs.get_knots()  
+    x_asis = np.linspace(0, 1, 101)
+    #设置控制点
+    bs.cp = restore_cp       # 标签(控制点)
+    res_curves = bs.bs(x_asis)
+    plt.plot(res_curves[:, 0], res_curves[:, 1])
+
+    plotMap(juncDir="./data/data_0/junction")
+
+def showCPP():
+    cp = np.loadtxt("./test/pred_cp.csv", delimiter=",", dtype="double")
+    bs_curve = np.loadtxt("./test/bs_curve.csv", delimiter=",", dtype="double")
+    plt.scatter(cp[:, 0], cp[:, 1])
+    plt.plot(bs_curve[:, 0], bs_curve[:, 1])
+    plotMap(juncDir="./data/data_0/junction")
+
+
 if __name__ == '__main__':
     
-    run(isAug=True)
+    # run(isAug=True)
 
+    # args = get_common_args()
+    # modelPath = './model/2205_091659/episodes_999.pth'
+    # getFeature("./test/tra.csv", pointNum=20, modelPath=modelPath, args=args)
+
+    # showCPP()
+    plotMap(juncDir="./data/data_6/junction")
 #################################################################################
 # 测试函数
 

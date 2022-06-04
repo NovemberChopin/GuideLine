@@ -1,4 +1,3 @@
-from cProfile import label
 import numpy as np
 import os, sys
 import random
@@ -56,7 +55,7 @@ class BCAgent():
         # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
         for epoch in range(self.args.episodes_num):
             for X, y in self.data_iter(self.batch_size, self.features, self.labels): 
-                X = torch.FloatTensor(X)
+                X = torch.FloatTensor(X[:, 5:])
                 y = torch.FloatTensor(y)
                 pred = self.net(X)                  # (batch_size, 18)
                 # loss = self.loss_function(pred, y)  # (batch_size, 18)

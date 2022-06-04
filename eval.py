@@ -42,6 +42,8 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     print('load network successed')
     model.eval()
 
+    print("feature: ", feature.reshape(-1, 2))
+
     feature = torch.FloatTensor(feature).view(1, -1)
     pred = model(feature)
 
@@ -63,6 +65,7 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     # firstCP = np.array(label[0, :])
     # pred = np.vstack([firstCP, pred])
     pred[0, :] = label[0, :]
+    print("---pred: ", pred)
 
     x_asis = np.linspace(0, 1, 101)
     #设置控制点
@@ -71,10 +74,11 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     bs.cp = pred        # 网络输出
     curves_pred = bs.bs(x_asis)
 
-    rot_label = rot(tra=curves_label, point=[0, 0], sin=sin, cos=cos, rotDirec=0)
-    rot_pred = rot(tra=curves_pred, point=[0, 0], sin=sin, cos=cos, rotDirec=0)
-    rot_label_cp = rot(tra=label, point=[0, 0], sin=sin, cos=cos, rotDirec=0)
-    rot_pred_cp = rot(tra=pred, point=[0, 0], sin=sin, cos=cos, rotDirec=0)
+    # 以自身第一个点旋转
+    rot_label = rot(tra=curves_label, point=curves_label[0, :], sin=sin, cos=cos, rotDirec=0)
+    rot_pred = rot(tra=curves_pred, point=curves_pred[0, :], sin=sin, cos=cos, rotDirec=0)
+    rot_label_cp = rot(tra=label, point=label[0, :], sin=sin, cos=cos, rotDirec=0)
+    rot_pred_cp = rot(tra=pred, point=pred[0, :], sin=sin, cos=cos, rotDirec=0)
     rot_label[:, 0] *= 10
     rot_pred[:, 0] *= 10
     rot_label_cp[:, 0] *= 10
@@ -95,24 +99,22 @@ def eval(feature, label, juncDir, traDir, modelPath, cpNum, degree):
     pred_cp[:, 1] += centerLane[0, 1]
 
     dataDir = juncDir.split('/j')[0]
-    pltTra(juncDir=juncDir, dataDir=dataDir)
+    # pltTra(juncDir=juncDir, dataDir=dataDir)
 
-    # plt.plot(curves_label[:, 0], curves_label[:, 1], color='b')
+    plt.plot(curves_label[:, 0], curves_label[:, 1], color='b')
     plt.plot(curves_pred[:, 0], curves_pred[:, 1], color='r')
-    # plt.scatter(label_cp[:, 0], label_cp[:, 1], color='b')
+    plt.scatter(label_cp[:, 0], label_cp[:, 1], color='b')
     plt.scatter(pred_cp[:, 0], pred_cp[:, 1], color='r')
     
-    # plotMap(juncDir=juncDir)    # 打印路段信息
+    plotMap(juncDir=juncDir)    # 打印路段信息
     
     plt.show()
 
 
 def evalModel(modelPath):
-    data_dirs=glob.glob(pathname='./data/*data*')
-    print(data_dirs)
-    # for dir in ['./data/data_1', './data/data_2', './data/data_6', './data/data_0']:
-    data_dirs=glob.glob(pathname='./data/*data*')
-    for dir in data_dirs:
+    for dir in ['./data/data_0', './data/data_1', './data/data_2', './data/data_6']:
+    # data_dirs=glob.glob(pathname='./data/*data*')
+    # for dir in data_dirs:
         sub_data = dir.split('/')[2]
         bagName = config[sub_data]['testBag']
         juncDir = '{}/junction'.format(dir)
@@ -121,7 +123,7 @@ def evalModel(modelPath):
         fea = np.load("{}/feature.npy".format(traDir))
         lab = np.load("{}/label.npy".format(traDir))
         eval(
-            feature=fea,
+            feature=fea[:, 5:],
             label=lab,
             modelPath=modelPath,
             juncDir=juncDir, 
@@ -131,8 +133,8 @@ def evalModel(modelPath):
 
 if __name__ == '__main__':
     # 2204_091800 --> 缩放版本
-    modelPath = './model/2204_262046/episodes_999.pth'
-    # evalModel(modelPath=modelPath)
+    modelPath = './model/2205_091659/episodes_999.pth'
+    evalModel(modelPath=modelPath)
 
-    
-    convertModel(modelPath=modelPath)
+
+    # convertModel(modelPath=modelPath)

@@ -17,7 +17,7 @@ def get_common_args():
     parser.add_argument('--max_steps', type=int, default=1000, help='the max number of step for a episode')
     parser.add_argument("--num_units_1", type=int, default=128, help="number of units in the mlp")
     parser.add_argument("--num_units_2", type=int, default=64, help="number of units in the mlp")
-    parser.add_argument("--input_size", type=int, default=23, help="input size")
+    parser.add_argument("--input_size", type=int, default=18, help="input size")
     parser.add_argument("--output_size", type=int, default=18, help="output size: B-spline contral points")
     parser.add_argument("--device", type=str, default="cpu", help="use CPU or GPU")
     parser.add_argument("--eva_period", type=int, default=5, help="the evaluate time")

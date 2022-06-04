@@ -124,7 +124,7 @@ def pltTra(juncDir, dataDir=None, traDir=None):
         boundary[:, 0] -= start_x
         boundary[:, 1] -= start_y
         plt.plot(boundary[:, 0], boundary[:, 1], color='r')
-    plt.show()
+    # plt.show()
 
 
 def calcuBoundary(laneInfo):
